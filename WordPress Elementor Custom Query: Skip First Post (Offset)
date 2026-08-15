@@ -1,0 +1,21 @@
+Instructions
+Kahan Paste Karein:
+Is PHP code ko apni WordPress theme ki functions.php file mein paste karein (Child Theme ka use karna behtar hai) ya phir kisi Code Snippets plugin ke zariye add karein.
+
+Elementor Me Kaise Use Karein:
+
+WordPress dashboard mein Elementor editor open karein jahan aapne Posts ya Loop Grid widget lagaya hua hai.
+
+Widget ki settings mein Query section par jayein.
+
+Query ID wale field mein exact yeh naam likh dein: skip_first_post
+
+Kaise Kaam Karega:
+Yeh code automatically query ka pehla post skip kar dega, jisse aapka pehla post repeat nahi hoga aur aap use alag se Featured Post ke taur par dikha sakenge.
+
+
+
+function skip_first_post_query( $query ) {
+    $query->set( 'offset', 1 );
+}
+add_action( 'elementor/query/skip_first_post', 'skip_first_post_query' );
