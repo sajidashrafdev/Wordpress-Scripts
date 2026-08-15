@@ -1,0 +1,45 @@
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const header = document.querySelector(".my-header");
+
+    if (!header) return;
+
+    function toggleHeader() {
+        if (window.scrollY > 50) {
+            header.classList.add("scrolled");
+        } else {
+            header.classList.remove("scrolled");
+        }
+    }
+
+    toggleHeader();
+    window.addEventListener("scroll", toggleHeader);
+});
+</script>
+
+
+mein container ko class do "my-header" aur yeh css do insert kro
+
+.my-header{
+    background: transparent;
+    transition: background 0.3s ease;
+}
+
+.my-header.scrolled {
+    background: rgba(10, 10, 10, 0.55) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    padding: 0px 20px;
+}
+
+.my-header img {
+    transition: transform 0.3s ease;
+    transform-origin: left center;
+}
+
+.my-header.scrolled img {
+    transform: scale(0.6);
+}
+

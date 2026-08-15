@@ -1,0 +1,162 @@
+/* ==================================================================
+   ROBUST FIX — Elementor Nested Carousel (n-carousel widget) ko
+   completely JS-controlled smooth infinite scroll mein convert karta hai.
+
+   Ye Swiper ke CSS animation conflict ka masla khatam karta hai kyunki
+   ab hum Swiper ko poori tarah destroy kar ke khud har frame pe
+   transform manually move kar rahe hain (requestAnimationFrame).
+
+   ------------------------------------------------------------------
+   ZAROORI: Neeche "de4ba77" wahi widget ID hai jo aapke diye gaye
+   HTML mein hai (data-id="de4ba77"). Agar Elementor mein widget
+   dobara save/edit hone se ID change ho jaye, to sirf yahan
+   'de4ba77' ko naye ID se replace kar dein.
+   ================================================================== */
+
+/* ---------- STEP 1: CSS ----------
+   Widget > Advanced > Custom CSS mein ye paste karein
+------------------------------------------------------------------ */
+
+selector .e-n-carousel {
+  overflow: hidden !important;
+}
+
+selector .swiper-wrapper {
+  transition: none !important;
+}
+
+selector .swiper-slide {
+  transition: none !important;
+  flex-shrink: 0 !important;
+}
+
+/* navigation arrows / pagination dots agar dikh rahe hon to hide kar dein */
+selector .swiper-button-next,
+selector .swiper-button-prev,
+selector .swiper-pagination {
+  display: none !important;
+}
+
+
+/* ---------- STEP 2: JS ----------
+   Elementor > Site Settings > Custom Code mein "Body End" location
+   pe add karein (Elementor Pro chahiye). Agar Pro nahi hai to
+   "Insert Headers and Footers" ya "WPCode" jaisa free plugin use
+   kar ke footer mein daal dein.
+------------------------------------------------------------------ */
+
+<script>
+(function () {
+  var WIDGET_SELECTOR = '.elementor-element-de4ba77'; // <-- yahan apni widget ID daalein
+  var SPEED = 0.6; // px per frame — number badhayein to scroll fast, ghatayein to slow
+
+  function startMarquee() {
+    var root = document.querySelector(WIDGET_SELECTOR);
+    if (!root) return;
+
+    var container = root.querySelector('.e-n-carousel');
+    var wrapper = root.querySelector('.swiper-wrapper');
+    if (!container || !wrapper) return;
+
+    if (wrapper.dataset.marqueeStarted === 'yes') return; // dobara na chale
+    wrapper.dataset.marqueeStarted = 'yes';
+
+    // Slides ki original width (369px wagera) hamesha ke liye note kar lein
+    // taake Swiper destroy hone ke baad bhi ye width barqarar rahe
+    var originalSlideStyles = [];
+    wrapper.querySelectorAll('.swiper-slide').forEach(function (slide) {
+      originalSlideStyles.push({ el: slide, width: slide.style.width, marginRight: slide.style.marginRight });
+    });
+
+    // Swiper ka JS control poori tarah band karein
+    // IMPORTANT: cleanStyles = false rakhein, warna Swiper slides ki
+    // width (369px) khud hata deta hai aur sirf 1 slide dikhne lagta hai
+    if (container.swiper) {
+      try {
+        container.swiper.autoplay && container.swiper.autoplay.stop();
+        container.swiper.allowTouchMove = false;
+        container.swiper.destroy(false, false); // dono false — kuch bhi apne aap clean na kare
+      } catch (e) {}
+    }
+
+    // Agar phir bhi kisi wajah se width nikal gayi ho to wapas laga dein
+    originalSlideStyles.forEach(function (item) {
+      if (!item.el.style.width) item.el.style.width = item.width || '369px';
+      if (!item.el.style.marginRight) item.el.style.marginRight = item.marginRight || '10px';
+      item.el.style.flexShrink = '0';
+    });
+
+    // Sirf original (non-duplicate) slides rakhein, purane duplicates hata dein
+    var allSlides = Array.prototype.slice.call(wrapper.querySelectorAll('.swiper-slide'));
+    var seen = {};
+    var originals = [];
+
+    allSlides.forEach(function (slide) {
+      var key = slide.getAttribute('data-swiper-slide-index');
+      if (key === null) {
+        originals.push(slide);
+        return;
+      }
+      if (!seen[key]) {
+        seen[key] = true;
+        originals.push(slide);
+      } else {
+        slide.remove(); // extra duplicate hata dein
+      }
+    });
+
+    // Wrapper ko saaf karke original slides wapas order se lagayein
+    wrapper.innerHTML = '';
+    wrapper.style.display = 'flex';
+    wrapper.style.width = 'max-content';
+    wrapper.style.transform = 'translate3d(0,0,0)';
+    wrapper.style.willChange = 'transform';
+
+    originals.forEach(function (slide) {
+      slide.style.transition = 'none';
+      slide.removeAttribute('aria-hidden');
+      slide.removeAttribute('inert');
+      wrapper.appendChild(slide);
+    });
+
+    // Seamless loop ke liye pura set ek baar clone karke dobara jorein
+    var clone = document.createDocumentFragment();
+    originals.forEach(function (slide) {
+      clone.appendChild(slide.cloneNode(true));
+    });
+    wrapper.appendChild(clone);
+
+    // Ab smooth continuous scroll shuru karein
+    var pos = 0;
+    var singleSetWidth = 0;
+
+    function measure() {
+      singleSetWidth = wrapper.scrollWidth / 2;
+    }
+    measure();
+    window.addEventListener('resize', measure);
+
+    function step() {
+      pos -= SPEED;
+      if (Math.abs(pos) >= singleSetWidth) {
+        pos = 0; // pehle set ke end pe pahunchte hi bina jerk ke reset (duplicate set ki wajah se ye invisible hai)
+      }
+      wrapper.style.transform = 'translate3d(' + pos + 'px,0,0)';
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  if (document.readyState === 'complete') {
+    setTimeout(startMarquee, 600);
+  } else {
+    window.addEventListener('load', function () {
+      setTimeout(startMarquee, 600);
+    });
+  }
+
+  // Elementor kabhi kabhi widgets ko thoda late render karta hai (lazy load / AJAX),
+  // isliye ek dobara try bhi kar lete hain kuch second baad
+  setTimeout(startMarquee, 2000);
+})();
+</script>

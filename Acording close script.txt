@@ -1,0 +1,22 @@
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    function closeAllElementorAccordions() {
+        document.querySelectorAll(".e-n-accordion details[open]").forEach(function(item) {
+            item.removeAttribute("open");
+            const summary = item.querySelector("summary");
+            if (summary) {
+                summary.setAttribute("aria-expanded", "false");
+            }
+        });
+    }
+
+    // Sirf Initial load par band karein
+    closeAllElementorAccordions();
+
+    if (window.elementorFrontend) {
+        jQuery(window).on("elementor/frontend/init", function () {
+            closeAllElementorAccordions();
+        });
+    }
+});
+</script>

@@ -1,0 +1,408 @@
+<style>
+
+/*==========================================================
+ WooCommerce Global Color Override
+ Brand: Black + #86191c
+==========================================================*/
+
+:root{
+    --primary:#000000;
+    --accent:#86191c;
+    --text:#000;
+    --light:#f8f8f8;
+    --border:#dddddd;
+    --white:#ffffff;
+}
+
+/* TEXT */
+
+.woocommerce,
+.woocommerce-page{
+    color:var(--text);
+}
+
+/* LINKS */
+
+.woocommerce a,
+.woocommerce-page a{
+    color:var(--primary);
+    transition:.3s;
+}
+
+.woocommerce a:hover,
+.woocommerce-page a:hover{
+    color:var(--accent);
+}
+
+/* PRICE */
+
+.price,
+.price *,
+.amount,
+.woocommerce-Price-amount,
+ins,
+ins *{
+    color:var(--accent)!important;
+}
+
+/* SALE PRICE */
+
+del,
+del *{
+    color:#888!important;
+}
+
+/* BUTTONS */
+
+.woocommerce button.button,
+.woocommerce a.button,
+.woocommerce input.button,
+.woocommerce #respond input#submit,
+.woocommerce .button,
+.checkout-button,
+.wc-forward{
+    background:var(--primary)!important;
+    color:#fff!important;
+    border:1px solid var(--primary)!important;
+    box-shadow:none!important;
+}
+
+.woocommerce button.button:hover,
+.woocommerce a.button:hover,
+.woocommerce input.button:hover,
+.woocommerce #respond input#submit:hover,
+.checkout-button:hover,
+.wc-forward:hover{
+    background:var(--accent)!important;
+    border-color:var(--accent)!important;
+    color:#fff!important;
+}
+
+/* NOTICES */
+
+.woocommerce-message,
+.woocommerce-info,
+.woocommerce-error{
+    background:#fff!important;
+    border:1px solid var(--primary)!important;
+    border-top:3px solid var(--accent)!important;
+    color:#000!important;
+}
+
+.woocommerce-message::before,
+.woocommerce-info::before,
+.woocommerce-error::before{
+    color:var(--accent)!important;
+}
+
+.woocommerce-message a,
+.woocommerce-info a,
+.woocommerce-error a{
+    color:var(--accent)!important;
+}
+
+/* FORM */
+
+.woocommerce input,
+.woocommerce textarea,
+.woocommerce select{
+    border:1px solid var(--border)!important;
+    background:#fff!important;
+    color:#000!important;
+}
+
+.woocommerce input:focus,
+.woocommerce textarea:focus,
+.woocommerce select:focus{
+    border-color:var(--accent)!important;
+    box-shadow:none!important;
+    outline:none!important;
+}
+
+/* CHECKBOX */
+
+input[type=checkbox],
+input[type=radio]{
+    accent-color:var(--accent);
+}
+
+/* TABLE */
+
+.shop_table,
+.shop_table td,
+.shop_table th{
+    border-color:var(--border)!important;
+}
+
+/* CART */
+
+.cart_totals h2,
+.order-total,
+.order-total td,
+.order-total strong{
+    color:#000!important;
+}
+
+/* COUPON */
+
+.coupon input{
+    border:1px solid var(--accent)!important;
+}
+
+/* MY ACCOUNT */
+
+.woocommerce-MyAccount-navigation ul{
+    list-style:none;
+}
+
+.woocommerce-MyAccount-navigation a{
+    color:#000!important;
+}
+
+.woocommerce-MyAccount-navigation .is-active a{
+    background:var(--accent)!important;
+    color:#fff!important;
+    padding:10px;
+}
+
+/* PRODUCT TABS */
+
+.woocommerce-tabs ul.tabs li{
+    background:#fff!important;
+    border:1px solid var(--border)!important;
+}
+
+.woocommerce-tabs ul.tabs li a{
+    color:#000!important;
+}
+
+.woocommerce-tabs ul.tabs li.active{
+    background:var(--accent)!important;
+}
+
+.woocommerce-tabs ul.tabs li.active a{
+    color:#fff!important;
+}
+
+/* STAR */
+
+.star-rating,
+.stars a{
+    color:var(--accent)!important;
+}
+
+/* SALE BADGE */
+
+.onsale{
+    background:var(--accent)!important;
+    color:#fff!important;
+}
+
+/* BREADCRUMB */
+
+.woocommerce-breadcrumb,
+.woocommerce-breadcrumb a{
+    color:#000!important;
+}
+
+.woocommerce-breadcrumb a:hover{
+    color:var(--accent)!important;
+}
+
+/* PAGINATION */
+
+.woocommerce nav.woocommerce-pagination ul li a{
+    color:#000!important;
+}
+
+.woocommerce nav.woocommerce-pagination ul li span.current{
+    background:var(--accent)!important;
+    color:#fff!important;
+    border-color:var(--accent)!important;
+}
+
+/* QUANTITY */
+
+.quantity input{
+    border:1px solid var(--accent)!important;
+}
+
+/* STOCK */
+
+.stock{
+    color:var(--accent)!important;
+}
+
+/* PRODUCT META */
+
+.product_meta,
+.product_meta a{
+    color:#000!important;
+}
+
+.product_meta a:hover{
+    color:var(--accent)!important;
+}
+
+/* CHECKOUT */
+
+.woocommerce-checkout h3,
+.woocommerce-checkout h2{
+    color:#000!important;
+}
+
+.payment_box{
+    background:#f8f8f8!important;
+    color:#000!important;
+}
+
+.payment_box::before{
+    border-bottom-color:#f8f8f8!important;
+}
+
+/* SELECT2 */
+
+.select2-container--default .select2-selection--single{
+    border:1px solid var(--border)!important;
+    height:44px;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered{
+    line-height:44px;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow{
+    height:44px;
+}
+
+.select2-container--default .select2-results__option--highlighted{
+    background:var(--accent)!important;
+    color:#fff!important;
+}
+
+/* REVIEW */
+
+.woocommerce-review-link,
+.woocommerce-review-link a{
+    color:#000!important;
+}
+
+.woocommerce-review-link:hover,
+.woocommerce-review-link a:hover{
+    color:var(--accent)!important;
+}
+
+/* REQUIRED */
+
+.required{
+    color:var(--accent)!important;
+}
+
+/* MINI CART */
+
+.widget_shopping_cart a,
+.elementor-menu-cart__product-name{
+    color:#000!important;
+}
+
+.widget_shopping_cart a:hover,
+.elementor-menu-cart__product-name:hover{
+    color:var(--accent)!important;
+}
+
+/* REMOVE */
+
+a.remove{
+    color:var(--accent)!important;
+}
+
+a.remove:hover{
+    background:var(--accent)!important;
+    color:#fff!important;
+}
+
+/* WOOCOMMERCE BLOCKS */
+
+.wc-block-components-button{
+    background:var(--primary)!important;
+    color:#fff!important;
+}
+
+.wc-block-components-button:hover{
+    background:var(--accent)!important;
+}
+
+.wc-block-components-product-price,
+.wc-block-formatted-money-amount{
+    color:var(--accent)!important;
+}
+
+.wc-block-components-notice-banner{
+    border-color:var(--accent)!important;
+}
+
+/* PLACE ORDER */
+
+#place_order{
+    background:var(--primary)!important;
+}
+
+#place_order:hover{
+    background:var(--accent)!important;
+}
+
+/* UPDATE CART */
+
+button[name="update_cart"]{
+    background:var(--primary)!important;
+}
+
+button[name="update_cart"]:hover{
+    background:var(--accent)!important;
+}
+
+/* APPLY COUPON */
+
+button[name="apply_coupon"]{
+    background:var(--primary)!important;
+}
+
+button[name="apply_coupon"]:hover{
+    background:var(--accent)!important;
+}
+
+/* ADD TO CART */
+
+.single_add_to_cart_button{
+    background:var(--primary)!important;
+}
+
+.single_add_to_cart_button:hover{
+    background:var(--accent)!important;
+}
+
+/* DEFAULT BLUE/GREEN OVERRIDE */
+
+.woocommerce .added_to_cart,
+.woocommerce .restore-item,
+.woocommerce .shipping-calculator-button,
+.woocommerce .showcoupon,
+.woocommerce .showlogin,
+.woocommerce .lost_password a,
+.woocommerce .reset_variations,
+.woocommerce .woocommerce-privacy-policy-link{
+    color:var(--accent)!important;
+}
+
+.woocommerce .added_to_cart:hover,
+.woocommerce .restore-item:hover,
+.woocommerce .shipping-calculator-button:hover,
+.woocommerce .showcoupon:hover,
+.woocommerce .showlogin:hover,
+.woocommerce .lost_password a:hover,
+.woocommerce .reset_variations:hover,
+.woocommerce .woocommerce-privacy-policy-link:hover{
+    color:var(--primary)!important;
+}
+
+</style>
