@@ -1,117 +1,588 @@
 add_shortcode('custom_product_gallery', 'render_custom_product_gallery');
 
 function render_custom_product_gallery() {
-    ob_start();
-    
-    $product_id = 3590;
-    $product = wc_get_product($product_id);
 
-    if ($product) {
-        $thumbnail_id = $product->get_image_id();
-        $main_image_url = wp_get_attachment_image_url($thumbnail_id, 'full');
-        $gallery_image_ids = $product->get_gallery_image_ids();
-        
-        // Updated Video URL
-        $video_url = 'https://lunasilk.pl/wp-content/uploads/2026/09/Product-video.mp4';
+    ob_start();
+
+    $product_id = 3590;
+    $product    = wc_get_product($product_id);
+
+    if (!$product) {
+        return '';
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * PRODUCT IMAGES
+     * ---------------------------------------------------------
+     */
+
+    $thumbnail_id     = $product->get_image_id();
+    $main_image_url   = wp_get_attachment_image_url($thumbnail_id, 'full');
+    $gallery_image_ids = $product->get_gallery_image_ids();
+
+
+    /*
+     * ---------------------------------------------------------
+     * FIND VIDEO GALLERY DATA
+     *
+     * Video Gallery for WooCommerce stores data using
+     * structures like:
+     *
+     * video_url[4141][video_url]
+     * video_url[4141][video_thumb_url]
+     * ---------------------------------------------------------
+     */
+
+    $video_items = array();
+
+    $all_meta = get_post_meta($product_id);
+
+    foreach ($all_meta as $meta_key => $meta_values) {
+
+        /*
+         * Search all product meta values for the plugin's
+         * video_url structure.
+         */
+
+        foreach ($meta_values as $meta_value) {
+
+            $decoded = maybe_unserialize($meta_value);
+
+            if (is_array($decoded)) {
+
+                /*
+                 * Recursive function to find video structures.
+                 */
+                $find_videos = function($data) use (&$find_videos, &$video_items) {
+
+                    if (!is_array($data)) {
+                        return;
+                    }
+
+                    /*
+                     * Direct video structure
+                     */
+                    if (
+                        isset($data['video_url']) &&
+                        is_string($data['video_url']) &&
+                        filter_var($data['video_url'], FILTER_VALIDATE_URL)
+                    ) {
+
+                        $video_url = $data['video_url'];
+
+                        $thumb_url = '';
+
+                        if (
+                            isset($data['video_thumb_url']) &&
+                            is_string($data['video_thumb_url'])
+                        ) {
+                            $thumb_url = $data['video_thumb_url'];
+                        }
+
+                        $video_items[] = array(
+                            'video_url' => $video_url,
+                            'thumb_url' => $thumb_url,
+                            'title'     => isset($data['video_title'])
+                                ? $data['video_title']
+                                : '',
+                        );
+
+                        return;
+                    }
+
+                    /*
+                     * Continue searching nested arrays.
+                     */
+                    foreach ($data as $value) {
+
+                        if (is_array($value)) {
+                            $find_videos($value);
+                        }
+                    }
+                };
+
+                $find_videos($decoded);
+            }
+        }
+    }
+
+
+    /*
+     * ---------------------------------------------------------
+     * REMOVE DUPLICATE VIDEOS
+     * ---------------------------------------------------------
+     */
+
+    $unique_videos = array();
+
+    foreach ($video_items as $video) {
+
+        if (empty($video['video_url'])) {
+            continue;
+        }
+
+        $unique_videos[$video['video_url']] = $video;
+    }
+
+    $video_items = array_values($unique_videos);
+
+
+    /*
+     * ---------------------------------------------------------
+     * TOTAL THUMBNAILS
+     * ---------------------------------------------------------
+     */
+
+    $total_media = 1 + count($gallery_image_ids) + count($video_items);
+
+
+    /*
+     * ---------------------------------------------------------
+     * OUTPUT
+     * ---------------------------------------------------------
+     */
+
     ?>
 
     <div class="custom-product-gallery">
-      <!-- Main Display Area -->
-      <div class="main-display-container">
-        <div id="main-image-view" class="main-view active">
-          <img id="active-main-img" alt="<?php echo esc_attr($product->get_name()); ?> — główny widok" src="<?php echo esc_url($main_image_url); ?>">
-          <span class="zoom-badge">NAJEDŹ, ABY POWIĘKSZYĆ</span>
+
+        <!-- MAIN DISPLAY -->
+
+        <div class="main-display-container">
+
+            <div id="main-image-view" class="main-view active">
+
+                <img
+                    id="active-main-img"
+                    src="<?php echo esc_url($main_image_url); ?>"
+                    alt="<?php echo esc_attr($product->get_name()); ?> — główny widok"
+                >
+
+                <span class="zoom-badge">
+                    NAJEDŹ, ABY POWIĘKSZYĆ
+                </span>
+
+            </div>
+
+
+            <div id="main-video-view" class="main-view">
+
+                <video
+                    id="active-main-video"
+                    controls
+                    preload="metadata"
+                    playsinline
+                ></video>
+
+            </div>
+
         </div>
-        
-        <div id="main-video-view" class="main-view">
-          <video id="active-main-video" controls>
-            <source src="<?php echo esc_url($video_url); ?>" type="video/mp4">
-            Your browser does not support the video tag.
-          </video>
+
+
+        <!-- THUMBNAILS -->
+
+        <div
+            class="thumbnails-grid"
+            style="grid-template-columns: repeat(<?php echo esc_attr($total_media); ?>, 1fr);"
+        >
+
+            <!-- MAIN IMAGE -->
+
+            <button
+                type="button"
+                class="thumb-btn active"
+                onclick="switchMedia(
+                    'image',
+                    '<?php echo esc_js($main_image_url); ?>',
+                    this
+                )"
+            >
+
+                <img
+                    src="<?php echo esc_url(
+                        wp_get_attachment_image_url(
+                            $thumbnail_id,
+                            'thumbnail'
+                        )
+                    ); ?>"
+                    alt="Miniatura Główna"
+                >
+
+            </button>
+
+
+            <!-- PRODUCT GALLERY IMAGES -->
+
+            <?php foreach ($gallery_image_ids as $index => $gallery_id) :
+
+                $gallery_img_url =
+                    wp_get_attachment_image_url(
+                        $gallery_id,
+                        'full'
+                    );
+
+                $gallery_thumb_url =
+                    wp_get_attachment_image_url(
+                        $gallery_id,
+                        'thumbnail'
+                    );
+
+            ?>
+
+                <button
+                    type="button"
+                    class="thumb-btn"
+                    onclick="switchMedia(
+                        'image',
+                        '<?php echo esc_js($gallery_img_url); ?>',
+                        this
+                    )"
+                >
+
+                    <img
+                        src="<?php echo esc_url($gallery_thumb_url); ?>"
+                        alt="Miniatura <?php echo esc_attr($index + 2); ?>"
+                    >
+
+                </button>
+
+            <?php endforeach; ?>
+
+
+            <!-- DYNAMIC PRODUCT VIDEOS -->
+
+            <?php foreach ($video_items as $video_index => $video) : ?>
+
+                <button
+                    type="button"
+                    class="thumb-btn video-thumb-outline"
+                    onclick="switchMedia(
+                        'video',
+                        '<?php echo esc_js($video['video_url']); ?>',
+                        this
+                    )"
+                    aria-label="Odtwórz film produktowy <?php echo esc_attr($video_index + 1); ?>"
+                >
+
+                    <?php if (!empty($video['thumb_url'])) : ?>
+
+                        <img
+                            src="<?php echo esc_url($video['thumb_url']); ?>"
+                            alt="Film produktowy <?php echo esc_attr($video_index + 1); ?>"
+                        >
+
+                        <span class="video-play-overlay">
+
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="#d4af37"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+
+                                <path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"></path>
+
+                            </svg>
+
+                        </span>
+
+                    <?php else : ?>
+
+                        <span class="video-icon-only">
+
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="#d4af37"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+
+                                <path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"></path>
+
+                            </svg>
+
+                        </span>
+
+                    <?php endif; ?>
+
+                </button>
+
+            <?php endforeach; ?>
+
         </div>
-      </div>
 
-      <!-- Thumbnails Row -->
-      <div class="thumbnails-grid" style="grid-template-columns: repeat(<?php echo count($gallery_image_ids) + 2; ?>, 1fr);">
-        
-        <button type="button" class="thumb-btn active" onclick="switchMedia('image', '<?php echo esc_url($main_image_url); ?>', this)">
-          <img src="<?php echo esc_url(wp_get_attachment_image_url($thumbnail_id, 'thumbnail')); ?>" alt="Miniatura Główna">
-        </button>
 
-        <?php foreach ($gallery_image_ids as $index => $gallery_id) : 
-          $gallery_img_url = wp_get_attachment_image_url($gallery_id, 'full');
-          $gallery_thumb_url = wp_get_attachment_image_url($gallery_id, 'thumbnail');
-        ?>
-          <button type="button" class="thumb-btn" onclick="switchMedia('image', '<?php echo esc_url($gallery_img_url); ?>', this)">
-            <img src="<?php echo esc_url($gallery_thumb_url); ?>" alt="Miniatura <?php echo $index + 2; ?>">
-          </button>
-        <?php endforeach; ?>
-        
-        <button type="button" class="thumb-btn video-thumb-outline" onclick="switchMedia('video', '', this)" aria-label="Odtwórz film produktowy">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="play-icon-outline"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"></path></svg>
-        </button>
-      </div>
+        <!-- BADGES -->
 
-      <!-- Badges -->
-      <div class="badges-container">
-        <span class="badge-item">100% JEDWAB</span>
-        <span class="badge-item">KSZTAŁT 3D</span>
-        <span class="badge-item">TOTALNE ZACIEMNIENIE</span>
-      </div>
+        <div class="badges-container">
+
+            <span class="badge-item">
+                100% JEDWAB
+            </span>
+
+            <span class="badge-item">
+                KSZTAŁT 3D
+            </span>
+
+            <span class="badge-item">
+                TOTALNE ZACIEMNIENIE
+            </span>
+
+        </div>
+
     </div>
 
+
     <style>
-      .custom-product-gallery { width: 100%; max-width: 600px; margin: 0 auto; }
-      .main-display-container { position: relative; aspect-ratio: 1 / 1; overflow: hidden; border: 1px solid #333; background-color: #111; }
-      .main-view { display: none; width: 100%; height: 100%; opacity: 0; transition: opacity 0.4s ease-in-out; }
-      .main-view.active { display: block; opacity: 1; }
-      .main-view img, .main-view video { width: 100%; height: 100%; object-fit: cover; }
-      .zoom-badge { position: absolute; left: 16px; top: 16px; background: rgba(0, 0, 0, 0.8); padding: 6px 12px; font-size: 10px; letter-spacing: 0.25em; color: #d4af37; border: 1px solid rgba(212, 175, 55, 0.3); z-index: 2; }
-      .thumbnails-grid { margin-top: 16px; display: grid; gap: 8px; }
-      .thumb-btn { aspect-ratio: 1 / 1; overflow: hidden; border: 1px solid #333; background: #111; padding: 0; cursor: pointer; transition: all 0.3s ease; }
-      .thumb-btn img { width: 100%; height: 100%; object-fit: cover; }
-      .thumb-btn:hover { border-color: rgba(212, 175, 55, 0.5); }
-      .thumb-btn.active { border-color: #d4af37; }
-      .video-thumb-outline { display: flex; align-items: center; justify-content: center; background-color: #111 !important; border: 1px solid #333; }
-      .video-thumb-outline.active { border-color: #d4af37 !important; background-color: #1a1a1a !important; }
-      .play-icon-outline { width: 24px; height: 24px; stroke: #d4af37; fill: none; }
-      .badges-container { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; }
-      .badge-item { border: 1px solid rgba(212, 175, 55, 0.3); background: #1a1a1a; padding: 6px 12px; font-size: 10px; letter-spacing: 0.2em; color: #d4af37; }
+
+        .custom-product-gallery {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .main-display-container {
+            position: relative;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            border: 1px solid #333;
+            background-color: #111;
+        }
+
+        .main-view {
+            display: none;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.4s ease-in-out;
+        }
+
+        .main-view.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .main-view img,
+        .main-view video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .main-view video {
+            background: #000;
+        }
+
+        .zoom-badge {
+            position: absolute;
+            left: 16px;
+            top: 16px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 6px 12px;
+            font-size: 10px;
+            letter-spacing: 0.25em;
+            color: #d4af37;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            z-index: 2;
+        }
+
+        .thumbnails-grid {
+            margin-top: 16px;
+            display: grid;
+            gap: 8px;
+        }
+
+        .thumb-btn {
+            position: relative;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            border: 1px solid #333;
+            background: #111;
+            padding: 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .thumb-btn img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .thumb-btn:hover {
+            border-color: rgba(212, 175, 55, 0.5);
+        }
+
+        .thumb-btn.active {
+            border-color: #d4af37;
+        }
+
+        .video-thumb-outline {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #111 !important;
+        }
+
+        .video-thumb-outline.active {
+            border-color: #d4af37 !important;
+            background-color: #1a1a1a !important;
+        }
+
+        .video-play-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.25);
+            pointer-events: none;
+        }
+
+        .video-icon-only {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .video-icon-only svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .badges-container {
+            margin-top: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .badge-item {
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            background: #1a1a1a;
+            padding: 6px 12px;
+            font-size: 10px;
+            letter-spacing: 0.2em;
+            color: #d4af37;
+        }
+
     </style>
 
-    <script>
-      function switchMedia(type, url, element) {
-        const buttons = document.querySelectorAll('.thumbnails-grid .thumb-btn');
-        buttons.forEach(btn => btn.classList.remove('active'));
-        element.classList.add('active');
-        
-        const imgView = document.getElementById('main-image-view');
-        const videoView = document.getElementById('main-video-view');
-        const mainImg = document.getElementById('active-main-img');
-        const mainVideo = document.getElementById('active-main-video');
 
-        if (type === 'image') {
-          videoView.classList.remove('active');
-          mainVideo.pause();
-          
-          // Smooth fade effect on image switch
-          mainImg.style.opacity = '0';
-          setTimeout(() => {
-            mainImg.src = url;
-            mainImg.style.opacity = '1';
-          }, 150);
-          
-          imgView.classList.add('active');
-        } else if (type === 'video') {
-          imgView.classList.remove('active');
-          videoView.classList.add('active');
-          mainVideo.play();
+    <script>
+
+        function switchMedia(type, url, element) {
+
+            const gallery = element.closest('.custom-product-gallery');
+
+            if (!gallery) {
+                return;
+            }
+
+            const buttons =
+                gallery.querySelectorAll(
+                    '.thumbnails-grid .thumb-btn'
+                );
+
+            buttons.forEach(function(btn) {
+                btn.classList.remove('active');
+            });
+
+            element.classList.add('active');
+
+
+            const imgView =
+                gallery.querySelector('#main-image-view');
+
+            const videoView =
+                gallery.querySelector('#main-video-view');
+
+            const mainImg =
+                gallery.querySelector('#active-main-img');
+
+            const mainVideo =
+                gallery.querySelector('#active-main-video');
+
+
+            if (type === 'image') {
+
+                mainVideo.pause();
+
+                mainVideo.removeAttribute('src');
+
+                videoView.classList.remove('active');
+
+
+                mainImg.style.opacity = '0';
+
+                setTimeout(function() {
+
+                    mainImg.src = url;
+
+                    mainImg.style.opacity = '1';
+
+                }, 150);
+
+
+                imgView.classList.add('active');
+
+            }
+
+
+            else if (type === 'video') {
+
+                imgView.classList.remove('active');
+
+                videoView.classList.add('active');
+
+
+                mainVideo.pause();
+
+                mainVideo.src = url;
+
+                mainVideo.load();
+
+
+                /*
+                 * Autoplay may be blocked by browser if the video
+                 * has audio, but because this function is triggered
+                 * by user click, browsers normally allow playback.
+                 */
+
+                const playPromise = mainVideo.play();
+
+                if (playPromise !== undefined) {
+
+                    playPromise.catch(function() {
+
+                        // Browser blocked autoplay.
+                        // Controls remain available.
+
+                    });
+
+                }
+
+            }
+
         }
-      }
+
     </script>
+
     <?php
-    }
+
     return ob_get_clean();
 }
-
-
