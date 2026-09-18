@@ -1,0 +1,365 @@
+<style>
+/* =========================================
+   BRAND SEARCH
+========================================= */
+
+.custom-brand-search-wrapper {
+    width: 100%;
+    max-width: 620px;
+}
+
+.custom-brand-search-form {
+    width: 100%;
+    margin: 0;
+}
+
+.brand-search-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+
+/* =========================================
+   INPUT
+========================================= */
+
+#live-brand-search-input {
+    width: 100%;
+    height: 58px;
+
+    padding: 0 65px 0 22px;
+
+    border: 1px solid #dfe3e8;
+    border-radius: 14px;
+
+    background: #ffffff;
+    color: #1d2733;
+
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 400;
+
+    outline: none;
+
+    box-sizing: border-box;
+
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+
+    transition:
+        border-color 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+
+/* Placeholder */
+
+#live-brand-search-input::placeholder {
+    color: #9299a3;
+    opacity: 1;
+}
+
+
+/* Focus */
+
+#live-brand-search-input:focus {
+    box-shadow:
+        0 8px 28px rgba(29, 108, 255, 0.12);
+}
+
+
+/* Remove browser search X */
+
+#live-brand-search-input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+
+/* =========================================
+   SEARCH BUTTON
+========================================= */
+
+.brand-search-submit {
+    position: absolute !important;
+
+    top: 50% !important;
+    right: 8px !important;
+
+    width: 42px !important;
+    height: 42px !important;
+
+    padding: 0 !important;
+    margin: 0 !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    transform: translateY(-50%) !important;
+
+    border: none !important;
+    border-radius: 10px !important;
+
+    background: #031429 !important;
+
+    cursor: pointer !important;
+
+    box-sizing: border-box !important;
+
+    transition:
+        background 0.25s ease,
+        transform 0.25s ease,
+        box-shadow 0.25s ease !important;
+}
+
+
+/* =========================================
+   CSS SEARCH ICON
+========================================= */
+
+.brand-search-icon {
+    position: relative;
+
+    display: block;
+
+    width: 15px;
+    height: 15px;
+
+    border: 2px solid #ffffff;
+
+    border-radius: 50%;
+
+    box-sizing: border-box;
+}
+
+
+/* Search icon handle */
+
+.brand-search-icon::after {
+    content: "";
+
+    position: absolute;
+
+    width: 7px;
+    height: 2px;
+
+    right: -5px;
+    bottom: -3px;
+
+    background: #ffffff;
+
+    border-radius: 2px;
+
+    transform: rotate(45deg);
+
+    transform-origin: center;
+}
+
+
+
+/* Remove Elementor button effects */
+
+.brand-search-submit:focus,
+.brand-search-submit:active {
+    outline: none !important;
+    box-shadow: none;
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 767px) {
+
+    .custom-brand-search-wrapper {
+        margin-bottom: 25px;
+    }
+
+    #live-brand-search-input {
+        height: 52px;
+
+        padding-left: 18px;
+        padding-right: 60px;
+
+        font-size: 15px;
+
+        border-radius: 12px;
+    }
+
+    .brand-search-submit {
+        width: 38px !important;
+        height: 38px !important;
+
+        right: 7px !important;
+
+        border-radius: 9px !important;
+    }
+
+    .brand-search-icon {
+        width: 14px;
+        height: 14px;
+
+        border-width: 2px;
+    }
+
+    .brand-search-icon::after {
+        width: 6px;
+        height: 2px;
+
+        right: -5px;
+        bottom: -3px;
+    }
+}
+</style>
+
+
+<!-- =========================================
+     SEARCH HTML
+========================================= -->
+
+<div class="custom-brand-search-wrapper">
+
+    <form
+        class="e-search-form custom-brand-search-form"
+        action="#"
+        method="get"
+    >
+
+        <div class="brand-search-input-wrapper">
+
+            <input
+                id="live-brand-search-input"
+                placeholder="Search brands..."
+                class="e-search-input"
+                type="search"
+                name="s"
+                autocomplete="off"
+            >
+
+            <button
+                class="brand-search-submit"
+                type="submit"
+                aria-label="Search brands"
+            >
+                <span class="brand-search-icon"></span>
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const searchInput = document.querySelector(
+        "#live-brand-search-input"
+    );
+
+    const searchForm = document.querySelector(
+        ".custom-brand-search-form"
+    );
+
+    if (!searchInput) return;
+
+
+    /* =========================================
+       PREVENT FORM SUBMISSION
+    ========================================= */
+
+    if (searchForm) {
+
+        searchForm.addEventListener("submit", function (e) {
+
+            e.preventDefault();
+
+            filterBrands();
+
+        });
+
+    }
+
+
+    /* =========================================
+       BRAND FILTER
+    ========================================= */
+
+    function filterBrands() {
+
+        const query = searchInput.value
+            .toLowerCase()
+            .trim();
+
+
+        const loopItems = document.querySelectorAll(
+            ".elementor-element-3598c2b .elementor-loop-container > .e-loop-item"
+        );
+
+
+        loopItems.forEach(function (item) {
+
+            /*
+             * Get the actual visible Brand CPT title
+             * from Elementor heading widget.
+             */
+
+            const titleElement = item.querySelector(
+                ".elementor-heading-title"
+            );
+
+
+            if (!titleElement) {
+                return;
+            }
+
+
+            const brandTitle = titleElement.textContent
+                .toLowerCase()
+                .trim();
+
+
+            /*
+             * Show all when search is empty
+             */
+
+            if (query === "") {
+
+                item.style.display = "";
+
+                return;
+            }
+
+
+            /*
+             * Search inside Brand CPT title
+             */
+
+            if (brandTitle.includes(query)) {
+
+                item.style.display = "";
+
+            } else {
+
+                item.style.display = "none";
+
+            }
+
+        });
+
+    }
+
+
+    /* =========================================
+       LIVE SEARCH
+    ========================================= */
+
+    searchInput.addEventListener(
+        "input",
+        filterBrands
+    );
+
+});
+</script>
