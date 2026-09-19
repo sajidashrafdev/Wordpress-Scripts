@@ -1,0 +1,458 @@
+<style>
+/* =========================================
+   BRAND / PRODUCT SEARCH
+========================================= */
+
+.custom-brand-search-wrapper {
+    width: 100%;
+    max-width: 620px;
+}
+
+.custom-brand-search-form {
+    width: 100%;
+    margin: 0;
+}
+
+.brand-search-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+
+/* =========================================
+   INPUT
+========================================= */
+
+#live-brand-search-input {
+    width: 100%;
+    height: 58px;
+
+    padding: 0 65px 0 22px;
+
+    border: 1px solid #dfe3e8;
+    border-radius: 14px;
+
+    background: #ffffff;
+    color: #1d2733;
+
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 400;
+
+    outline: none;
+
+    box-sizing: border-box;
+
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+
+    transition:
+        border-color 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+
+/* =========================================
+   FOCUS
+========================================= */
+
+#live-brand-search-input:focus {
+    border-color: #031429;
+
+    box-shadow:
+        0 5px 20px rgba(0, 0, 0, 0.06),
+        0 0 0 3px rgba(3, 20, 41, 0.06);
+}
+
+
+/* =========================================
+   PLACEHOLDER
+========================================= */
+
+#live-brand-search-input::placeholder {
+    color: #9299a3;
+    opacity: 1;
+}
+
+
+/* Remove browser search X */
+
+#live-brand-search-input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+
+/* =========================================
+   SEARCH BUTTON
+========================================= */
+
+.brand-search-submit {
+    position: absolute !important;
+
+    top: 50% !important;
+    right: 8px !important;
+
+    width: 42px !important;
+    height: 42px !important;
+
+    padding: 0 !important;
+    margin: 0 !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    transform: translateY(-50%) !important;
+
+    border: none !important;
+    border-radius: 10px !important;
+
+    background: #031429 !important;
+
+    cursor: pointer !important;
+
+    box-sizing: border-box !important;
+
+    transition:
+        background 0.25s ease,
+        transform 0.25s ease,
+        box-shadow 0.25s ease !important;
+}
+
+
+.brand-search-submit:hover {
+    background: #0b2747 !important;
+
+    transform: translateY(-50%) scale(1.04) !important;
+
+    box-shadow: 0 5px 15px rgba(3, 20, 41, 0.20) !important;
+}
+
+
+/* =========================================
+   CSS SEARCH ICON
+========================================= */
+
+.brand-search-icon {
+    position: relative;
+
+    display: block;
+
+    width: 15px;
+    height: 15px;
+
+    border: 2px solid #ffffff;
+
+    border-radius: 50%;
+
+    box-sizing: border-box;
+}
+
+
+.brand-search-icon::after {
+    content: "";
+
+    position: absolute;
+
+    width: 7px;
+    height: 2px;
+
+    right: -5px;
+    bottom: -3px;
+
+    background: #ffffff;
+
+    border-radius: 2px;
+
+    transform: rotate(45deg);
+
+    transform-origin: center;
+}
+
+
+/* =========================================
+   BUTTON FOCUS
+========================================= */
+
+.brand-search-submit:focus,
+.brand-search-submit:active {
+    outline: none !important;
+}
+
+
+/* =========================================
+   NO RESULTS
+========================================= */
+
+.brand-search-no-results {
+    display: none;
+
+    width: 100%;
+
+    margin-top: 25px;
+
+    text-align: center;
+
+    font-size: 15px;
+    font-weight: 400;
+
+    color: #6f7782;
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 767px) {
+
+    #live-brand-search-input {
+        height: 52px;
+
+        padding-left: 18px;
+        padding-right: 60px;
+
+        font-size: 15px;
+
+        border-radius: 12px;
+    }
+
+    .brand-search-submit {
+        width: 38px !important;
+        height: 38px !important;
+
+        right: 7px !important;
+
+        border-radius: 9px !important;
+    }
+
+    .brand-search-icon {
+        width: 14px;
+        height: 14px;
+
+        border-width: 2px;
+    }
+
+    .brand-search-icon::after {
+        width: 6px;
+        height: 2px;
+
+        right: -5px;
+        bottom: -3px;
+    }
+}
+</style>
+
+
+<!-- =========================================
+     SEARCH HTML
+========================================= -->
+
+<div class="custom-brand-search-wrapper">
+
+    <form
+        class="e-search-form custom-brand-search-form"
+        action="#"
+        method="get"
+    >
+
+        <div class="brand-search-input-wrapper">
+
+            <input
+                id="live-brand-search-input"
+                placeholder="Search products..."
+                class="e-search-input"
+                type="search"
+                name="s"
+                autocomplete="off"
+            >
+
+            <button
+                class="brand-search-submit"
+                type="submit"
+                aria-label="Search products"
+            >
+                <span class="brand-search-icon"></span>
+            </button>
+
+        </div>
+
+    </form>
+
+    <div
+        class="brand-search-no-results"
+        aria-live="polite"
+    >
+        No products found.
+    </div>
+
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const searchInput = document.querySelector(
+        "#live-brand-search-input"
+    );
+
+    const searchForm = document.querySelector(
+        ".custom-brand-search-form"
+    );
+
+    const noResults = document.querySelector(
+        ".brand-search-no-results"
+    );
+
+
+    if (!searchInput) {
+        return;
+    }
+
+
+    /* =========================================
+       GET PRODUCT LOOP ITEMS
+    ========================================= */
+
+    function getProductItems() {
+
+        return document.querySelectorAll(
+            ".elementor-element-69edaa3 .elementor-loop-container > .e-loop-item"
+        );
+
+    }
+
+
+    /* =========================================
+       FILTER PRODUCTS
+    ========================================= */
+
+    function filterProducts() {
+
+        const query = searchInput.value
+            .toLowerCase()
+            .trim();
+
+        const productItems = getProductItems();
+
+        let visibleProducts = 0;
+
+
+        productItems.forEach(function (item) {
+
+            /*
+             * Actual WooCommerce Product Title
+             *
+             * Example:
+             * <h3 class="product_title entry-title">
+             *     <a>Gochujang Korean Hot Chili Paste 1Kg</a>
+             * </h3>
+             */
+
+            const titleElement = item.querySelector(
+                ".product_title.entry-title"
+            );
+
+
+            if (!titleElement) {
+                return;
+            }
+
+
+            /*
+             * Get ONLY product title text
+             */
+
+            const productTitle = titleElement
+                .textContent
+                .toLowerCase()
+                .replace(/\s+/g, " ")
+                .trim();
+
+
+            /*
+             * Empty search
+             */
+
+            if (query === "") {
+
+                item.style.display = "";
+
+                visibleProducts++;
+
+                return;
+            }
+
+
+            /*
+             * Product title match
+             */
+
+            if (productTitle.includes(query)) {
+
+                item.style.display = "";
+
+                visibleProducts++;
+
+            } else {
+
+                item.style.display = "none";
+
+            }
+
+        });
+
+
+        /*
+         * No results message
+         */
+
+        if (noResults) {
+
+            if (query !== "" && visibleProducts === 0) {
+
+                noResults.style.display = "block";
+
+            } else {
+
+                noResults.style.display = "none";
+
+            }
+
+        }
+
+    }
+
+
+    /* =========================================
+       PREVENT FORM SUBMISSION
+    ========================================= */
+
+    if (searchForm) {
+
+        searchForm.addEventListener(
+            "submit",
+            function (e) {
+
+                e.preventDefault();
+
+                filterProducts();
+
+            }
+        );
+
+    }
+
+
+    /* =========================================
+       LIVE SEARCH
+    ========================================= */
+
+    searchInput.addEventListener(
+        "input",
+        filterProducts
+    );
+
+
+});
+</script>
